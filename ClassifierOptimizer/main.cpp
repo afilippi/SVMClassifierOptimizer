@@ -222,18 +222,33 @@ void optimizeClassifier(String posBase, String negBase, int numberOfPositives, i
 		numberOfTestImages = numberOfPositives;
 	}
 
+	int chunkIterator = 0;
+
 	for (int i = 0; i < numberOfTestImages; i +=chunkSize)
 	{
 		vector<String> negatives = masterNegativeFileNames;
 		vector<String> positives = masterPositiveFileNames;
 
+		int currentNumberOfTestImages = masterNegativeFileNames.size();
+		if (dept == POSITIVE)
+		{
+			currentNumberOfTestImages = masterPositiveFileNames.size();
+		}
+
+		int processedLength = chunkSize;
+
+		if (processedLength + chunkIterator > currentNumberOfTestImages)
+		{
+			processedLength = currentNumberOfTestImages - chunkIterator;
+		}
+
 		if (dept == NEGATIVE)
 		{
-			negatives.erase(negatives.begin(), negatives.begin() + chunkSize);
+			negatives.erase(negatives.begin() + chunkIterator, negatives.begin() + chunkIterator + processedLength);
 		}
 		else
 		{
-			positives.erase(positives.begin(), positives.begin() + chunkSize);
+			positives.erase(negatives.begin() + chunkIterator, negatives.begin() + chunkIterator + processedLength);
 		}
 
 		svm = runClassifierTraining(positives, negatives, params);
@@ -243,6 +258,7 @@ void optimizeClassifier(String posBase, String negBase, int numberOfPositives, i
 		if (total > bestTotal)
 		{
 			bestTotal = total;
+			svm->save(std::to_string(bestTotal)  +"motionHistory.xml");
 
 			if (dept == NEGATIVE)
 			{
@@ -256,14 +272,7 @@ void optimizeClassifier(String posBase, String negBase, int numberOfPositives, i
 		}
 		else
 		{
-			if (dept == NEGATIVE)
-			{
-				std::rotate(masterNegativeFileNames.begin(), masterNegativeFileNames.begin() + chunkSize, masterNegativeFileNames.end());
-			}
-			else
-			{
-				std::rotate(masterPositiveFileNames.begin(), masterPositiveFileNames.begin() + chunkSize, masterPositiveFileNames.end());
-			}
+			chunkIterator += chunkSize;
 			
 		}
 
@@ -272,6 +281,8 @@ void optimizeClassifier(String posBase, String negBase, int numberOfPositives, i
 	std::printf("/////FINISHED/////// \n\n");
 
 	svm = runClassifierTraining(masterPositiveFileNames, masterNegativeFileNames, params);
+
+	
 	float finalTotal = runClassifierTest(svm, masterPositiveTestFileNames, masterNegativeTestFileNames);
 
 	if (dept == NEGATIVE)
@@ -292,7 +303,7 @@ int main(int, char)
 	string posBase = "C:\\tests\\ClassInSession\\MotionHistory\\Positive15\\";
 	string negBase = "C:\\tests\\ClassInSession\\MotionHistory\\Negative15\\";
 
-	Dependent dept = POSITIVE;
+	Dependent dept = NEGATIVE;
 
 	int chunkSize = 100;
 

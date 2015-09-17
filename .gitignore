@@ -207,3 +207,11 @@ _Pvt_Extensions
 
 #test images
 *.jpg
+
+#test xmls
+*.xml
+
+#random thumb
+
+*.db
+
